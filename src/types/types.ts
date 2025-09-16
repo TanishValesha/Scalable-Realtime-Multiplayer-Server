@@ -6,6 +6,6 @@ export interface Client {
 }
 
 export interface Message {
-  type: string;
+  type: "echo" | "join" | "leave" | "chat" | "match_start";
   payload: any;
 }

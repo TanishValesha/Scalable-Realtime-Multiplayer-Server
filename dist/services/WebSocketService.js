@@ -1,10 +1,12 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { Logger } from "../utils/logger.js";
 import { v4 as uuidv4 } from "uuid";
+import { Queue } from "../utils/Queue.js";
 export class WebSocketService {
     constructor(port) {
         this.clients = new Map();
         this.rooms = new Map();
+        this.waitingQueue = new Queue();
         this.wss = new WebSocketServer({ port });
         this.initialize();
         Logger.info(`WebSocket Server created, listening on port ${port}`);
@@ -17,7 +19,6 @@ export class WebSocketService {
             Logger.info(`Client connected: ${clientId}`);
             socket.on("message", (data) => {
                 this.handleMessage(clientId, data);
-                // this.broadcast(clientId, data)
             });
             socket.on("close", () => this.handleDisconnect(clientId));
         });
@@ -38,6 +39,9 @@ export class WebSocketService {
                 case 'chat':
                     this.broadcastToRoom(message.payload.room, clientId, data);
                     break;
+                case 'match_start':
+                    this.addPlayersToQueue(clientId);
+                    break;
                 default:
                     Logger.error(`Unknown message type from ${clientId}: ${message.type}`);
             }
@@ -53,6 +57,35 @@ export class WebSocketService {
             }
         });
         Logger.info(`Broadcast to ${this.clients.size - 1} clients: ${data}`);
+    }
+    addPlayersToQueue(clientId) {
+        if (!this.clients.get(clientId))
+            return;
+        this.waitingQueue.enqueue(clientId);
+        Logger.info(`Client ${clientId} added to matchmaking queue`);
+        this.matchMaking();
+    }
+    matchMaking() {
+        const MATCH_SIZE = 2;
+        while (this.waitingQueue.size() >= MATCH_SIZE) {
+            const matchedPlayers = [];
+            for (let i = 0; i < MATCH_SIZE; i++) {
+                const player = this.waitingQueue.peek();
+                this.waitingQueue.dequeue();
+                if (player)
+                    matchedPlayers.push(player);
+            }
+            const matchRoomId = `match-${uuidv4()}`;
+            matchedPlayers.forEach(clientId => this.joinRoom(clientId, matchRoomId));
+            Logger.info(`Match created: ${matchRoomId} with players ${matchedPlayers.join(", ")}`);
+            matchedPlayers.forEach(clientId => {
+                const client = this.clients.get(clientId);
+                client?.socket.send(JSON.stringify({
+                    type: "match_start",
+                    payload: { room: matchRoomId, players: matchedPlayers }
+                }));
+            });
+        }
     }
     joinRoom(clientId, roomId) {
         if (!this.rooms.get(roomId)) {

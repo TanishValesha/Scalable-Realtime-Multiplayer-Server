@@ -2,12 +2,14 @@ import { WebSocketServer, WebSocket } from "ws";
 import type { Client, Message } from "../types/types.js";
 import { Logger } from "../utils/logger.js";
 import {v4 as uuidv4} from "uuid"
+import { Queue } from "../utils/Queue.js";
 
 
 export class WebSocketService {
     private wss: WebSocketServer;
     private clients: Map<string, Client> = new Map();
     private rooms: Map<string, Set<string>> = new Map();
+    private waitingQueue: Queue<string> = new Queue();
 
     constructor(port: number){
         this.wss = new WebSocketServer({port});
@@ -48,6 +50,9 @@ export class WebSocketService {
                 case 'chat':
                     this.broadcastToRoom(message.payload.room, clientId, data);
                     break;
+                case 'match_start':
+                    this.addPlayersToQueue(clientId);
+                    break;
                 default:
                     Logger.error(`Unknown message type from ${clientId}: ${message.type}`);
             }
@@ -65,6 +70,41 @@ export class WebSocketService {
         })
 
         Logger.info(`Broadcast to ${this.clients.size - 1} clients: ${data}`);
+    }
+
+    private addPlayersToQueue(clientId: string){
+        if(!this.clients.get(clientId)) return;
+        this.waitingQueue.enqueue(clientId);
+        Logger.info(`Client ${clientId} added to matchmaking queue`);
+
+        this.matchMaking();
+    }
+
+    private matchMaking(){
+        const MATCH_SIZE = 2;
+
+        while(this.waitingQueue.size() >= MATCH_SIZE){
+            const matchedPlayers: string[] = [];
+            for(let i = 0; i < MATCH_SIZE; i++){
+                const player = this.waitingQueue.peek();
+                this.waitingQueue.dequeue();
+                if(player) matchedPlayers.push(player);
+            }
+
+            const matchRoomId = `match-${uuidv4()}`
+
+            matchedPlayers.forEach(clientId => this.joinRoom(clientId, matchRoomId));
+
+            Logger.info(`Match created: ${matchRoomId} with players ${matchedPlayers.join(", ")}`);
+
+            matchedPlayers.forEach(clientId => {
+            const client = this.clients.get(clientId);
+            client?.socket.send(JSON.stringify({
+                type: "match_start",
+                payload: { room: matchRoomId, players: matchedPlayers }
+            }));
+        });
+        }
     }
 
     private joinRoom(clientId: string, roomId: string){
