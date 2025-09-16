@@ -22,7 +22,10 @@ export class WebSocketService {
 
             Logger.info(`Client connected: ${clientId}`);
 
-            socket.on("message", (data: string) => this.handleMessage(clientId, data))
+            socket.on("message", (data: string) => {
+                this.handleMessage(clientId, data); 
+                this.broadcast(clientId, data)
+            })
             socket.on("close", () => this.handleDisconnect(clientId));
         })
     }
@@ -30,12 +33,23 @@ export class WebSocketService {
     private handleMessage(clientId: string, data: string){
         try {
             const message: Message = JSON.parse(data);
+            
             Logger.info(`Received from ${clientId}: ${data}`);
             this.clients.get(clientId)?.socket.send(JSON.stringify({type: "echo", payload: message}));
         } catch (error) {
             Logger.error(`Invalid message from ${clientId}: ${data}`);
         }
 
+    }
+
+    private broadcast(senderId: string, data: string){       
+        this.clients.forEach((client) => {
+            if(client.socket.readyState === WebSocket.OPEN && client.id != senderId){
+                client.socket.send(JSON.stringify({type: "server", payload: JSON.parse(data)}));
+            }
+        })
+
+        Logger.info(`Broadcast to ${this.clients.size - 1} clients: ${data}`);
     }
 
     private handleDisconnect(clientId: string){
