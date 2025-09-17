@@ -1,38 +1,23 @@
-
-
-export interface PlayerState {
-    id: string;
-    x: number;
-    y: number;
-    health: number;
-}
-
-interface RoomState {
-    players: Map<string, PlayerState>;
-}
-
 export class GameStateService {
-    private rooms: Map<string, RoomState> = new Map();
-
-    createRoom(roomId: string, playerIds: string[]) {
-        const players = new Map<string, PlayerState>();
+    constructor() {
+        this.rooms = new Map();
+    }
+    /** Create room with initial player states */
+    createRoom(roomId, playerIds) {
+        const players = new Map();
         playerIds.forEach(id => {
             players.set(id, { id, x: 0, y: 0, health: 100 });
         });
         this.rooms.set(roomId, { players });
     }
-
-    handlePlayerAction(
-        roomId: string,
-        playerId: string,
-        action: { type: "move" | "attack" | "heal"; dx?: number; dy?: number; targetId?: string; damage?: number }
-    ) {
+    /** Handle a player's action (move, attack, heal) */
+    handlePlayerAction(roomId, playerId, action) {
         const room = this.rooms.get(roomId);
-        if (!room) return;
-
+        if (!room)
+            return;
         const player = room.players.get(playerId);
-        if (!player) return;
-
+        if (!player)
+            return;
         switch (action.type) {
             case "move":
                 player.x += action.dx ?? 0;
@@ -47,27 +32,28 @@ export class GameStateService {
                 }
                 break;
             case "heal":
-                player.health = Math.min(100, player.health + 20);
+                player.health = Math.min(100, player.health + 20); // heal 20 by default
                 break;
         }
     }
-
-    getRoomState(roomId: string) {
+    /** Return a JSON-friendly object for broadcasting */
+    getRoomState(roomId) {
         const room = this.rooms.get(roomId);
-        if (!room) return undefined;
-
+        if (!room)
+            return undefined;
         return {
-            players: Array.from(room.players.values())
+            players: Array.from(room.players.values()) // convert Map → array
         };
     }
-
-    removePlayerFromRoom(roomId: string, playerId: string) {
+    /** Remove player and clean up empty rooms */
+    removePlayerFromRoom(roomId, playerId) {
         const room = this.rooms.get(roomId);
-        if (!room) return;
-
+        if (!room)
+            return;
         room.players.delete(playerId);
         if (room.players.size === 0) {
             this.rooms.delete(roomId);
         }
     }
 }
+//# sourceMappingURL=GameStateService.js.map

@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/services/WebSocketService.ts","./src/types/types.ts","./src/utils/Queue.ts","./src/utils/logger.ts"],"version":"5.9.2"}
+{"root":["./src/index.ts","./src/services/GameStateService.ts","./src/services/WebSocketService.ts","./src/types/types.ts","./src/utils/Queue.ts","./src/utils/logger.ts"],"version":"5.9.2"}

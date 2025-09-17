@@ -3,10 +3,11 @@ export declare class WebSocketService {
     private clients;
     private rooms;
     private waitingQueue;
+    private gameState;
     constructor(port: number);
     private initialize;
     private handleMessage;
-    private broadcast;
+    private broadcastStateUpdate;
     private addPlayersToQueue;
     private matchMaking;
     private joinRoom;

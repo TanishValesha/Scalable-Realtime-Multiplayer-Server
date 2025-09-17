@@ -3,6 +3,7 @@ import type { Client, Message } from "../types/types.js";
 import { Logger } from "../utils/logger.js";
 import {v4 as uuidv4} from "uuid"
 import { Queue } from "../utils/Queue.js";
+import { GameStateService } from "./GameStateService.js";
 
 
 export class WebSocketService {
@@ -10,10 +11,12 @@ export class WebSocketService {
     private clients: Map<string, Client> = new Map();
     private rooms: Map<string, Set<string>> = new Map();
     private waitingQueue: Queue<string> = new Queue();
+    private gameState: GameStateService;
 
     constructor(port: number){
         this.wss = new WebSocketServer({port});
         this.initialize();
+        this.gameState = new GameStateService();
         Logger.info(`WebSocket Server created, listening on port ${port}`)
     }
 
@@ -53,6 +56,12 @@ export class WebSocketService {
                 case 'match_start':
                     this.addPlayersToQueue(clientId);
                     break;
+                case "player_action": {                                     
+                    const { room, action } = message.payload;
+                    this.gameState.handlePlayerAction(room, clientId, action);
+                    this.broadcastStateUpdate(room);
+                    break;
+                }
                 default:
                     Logger.error(`Unknown message type from ${clientId}: ${message.type}`);
             }
@@ -62,14 +71,21 @@ export class WebSocketService {
 
     }
 
-    private broadcast(senderId: string, data: string){       
-        this.clients.forEach((client) => {
-            if(client.socket.readyState === WebSocket.OPEN && client.id != senderId){
-                client.socket.send(JSON.stringify({type: "server", payload: JSON.parse(data)}));
-            }
-        })
+    private broadcastStateUpdate(roomId: string) {                        
+        const state = this.gameState.getRoomState(roomId);
+        if (!state) return;
 
-        Logger.info(`Broadcast to ${this.clients.size - 1} clients: ${data}`);
+        const clientsInRoom = this.rooms.get(roomId);
+        if (!clientsInRoom) return;
+
+        const payload = JSON.stringify({ type: "state_update", payload: state });
+
+        clientsInRoom.forEach(cid => {
+            const c = this.clients.get(cid);
+            if (c && c.socket.readyState === WebSocket.OPEN) {
+                c.socket.send(payload);
+            }
+        });
     }
 
     private addPlayersToQueue(clientId: string){
@@ -92,6 +108,10 @@ export class WebSocketService {
             }
 
             const matchRoomId = `match-${uuidv4()}`
+            
+            this.rooms.set(matchRoomId, new Set(matchedPlayers));
+
+            this.gameState.createRoom(matchRoomId, matchedPlayers);
 
             matchedPlayers.forEach(clientId => this.joinRoom(clientId, matchRoomId));
 
