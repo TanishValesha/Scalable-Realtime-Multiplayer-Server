@@ -19,7 +19,7 @@ export class MatchMakingService {
             players.push(player);
         }
         if (players.length === roomSize) {
-            const roomId = `room-${Date.now()}`;
+            const roomId = `match-${Date.now()}`;
             await this.rooms.createRoom(roomId, players);
             return roomId;
         }

@@ -76,4 +76,26 @@ export class RedisManager {
   public async del(key: string): Promise<void> {
     await this.publisher.del(key);
   }
+
+  public async hset( key: string, fieldOrEntries: string | string[], value?: string) {
+    if (Array.isArray(fieldOrEntries)) {
+      return this.publisher.hSet(key, fieldOrEntries);
+    }
+    if (value !== undefined) {
+      return this.publisher.hSet(key, fieldOrEntries, value);
+    }
+    throw new Error("Invalid arguments to hset");
+  }
+
+  public async hgetall(key: string): Promise<Record<string, string>> {
+    return this.publisher.hGetAll(key);
+  }
+
+  public async hincrby(key: string, field: string, amount: number) {
+    return this.publisher.hIncrBy(key, field, amount);
+  }
+
+  public async hget(key: string, field: string) {
+    return this.publisher.hGet(key, field);
+  }
 }

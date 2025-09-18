@@ -1,15 +1,14 @@
+import { GameStateService } from "./GameStateService.js";
 import { RoomService } from "./RoomService.js";
 import { MatchMakingService } from "./MatchMakingService.js";
 export declare class WebSocketService {
     private port;
     private roomService;
     private matchmaking;
+    private gameState;
     private wss;
     private clients;
-    private rooms;
-    private waitingQueue;
-    private gameState;
-    constructor(port: number, roomService: RoomService, matchmaking: MatchMakingService);
+    constructor(port: number, roomService: RoomService, matchmaking: MatchMakingService, gameState: GameStateService);
     private initialize;
     private handleAddPlayersToQueue;
     private nofifyMatchCreated;

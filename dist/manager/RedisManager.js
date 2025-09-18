@@ -60,5 +60,23 @@ export class RedisManager {
     async del(key) {
         await this.publisher.del(key);
     }
+    async hset(key, fieldOrEntries, value) {
+        if (Array.isArray(fieldOrEntries)) {
+            return this.publisher.hSet(key, fieldOrEntries);
+        }
+        if (value !== undefined) {
+            return this.publisher.hSet(key, fieldOrEntries, value);
+        }
+        throw new Error("Invalid arguments to hset");
+    }
+    async hgetall(key) {
+        return this.publisher.hGetAll(key);
+    }
+    async hincrby(key, field, amount) {
+        return this.publisher.hIncrBy(key, field, amount);
+    }
+    async hget(key, field) {
+        return this.publisher.hGet(key, field);
+    }
 }
 //# sourceMappingURL=RedisManager.js.map
