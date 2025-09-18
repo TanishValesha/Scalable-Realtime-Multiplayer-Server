@@ -2,7 +2,6 @@ import { WebSocketServer, WebSocket } from "ws";
 import type { Client, Message } from "../types/types.js";
 import { Logger } from "../utils/logger.js";
 import {v4 as uuidv4} from "uuid"
-import { Queue } from "../utils/Queue.js";
 import { GameStateService } from "./GameStateService.js";
 import { RoomService } from "./RoomService.js";
 import { MatchMakingService } from "./MatchMakingService.js";
