@@ -4,7 +4,7 @@ export interface Client {
     socket: WebSocket;
 }
 export interface Message {
-    type: "echo" | "join" | "leave" | "chat" | "match_start" | "player_action";
+    type: "ECHO" | "JOIN" | "LEAVE" | "CHAT" | "MATCH_START" | "PLAYER_ACTION";
     payload: any;
 }
 //# sourceMappingURL=types.d.ts.map

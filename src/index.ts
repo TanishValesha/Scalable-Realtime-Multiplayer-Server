@@ -1,13 +1,14 @@
-import { WebSocketService } from "./services/WebSocketService.js"
-import { Logger } from "./utils/logger.js";
+import { WebSocketService } from "./services/WebSocketService.js";
+import { RedisManager } from "./manager/RedisManager.js";
+import { RoomService } from "./services/RoomService.js";
+import { MatchMakingService } from "./services/MatchMakingService.js";
 
+(async () => {
+  const redis = new RedisManager("redis://localhost:6379");
+  await redis.connect();
 
-async function main() {
-    try {
-        new WebSocketService(8080);
-    } catch (error) {
-        Logger.error(`Failed to start WS server: ${error}`)
-    }
-}
+  const roomService = new RoomService(redis);
+  const matchMakingService = new MatchMakingService(redis, roomService);
 
-main();
+  new WebSocketService(8080, roomService, matchMakingService);
+})();

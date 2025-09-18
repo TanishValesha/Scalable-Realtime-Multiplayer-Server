@@ -19,7 +19,7 @@ export class MatchMakingService {
         return this.redis.dequeue<string>(this.queueId);
     }
 
-    public async matchMakingPlayers(roomSize = 3): Promise<string | null> {
+    public async matchMakingPlayers(roomSize = 2): Promise<string | null> {
         const players: string[] = [];
 
         for (let i = 0; i < roomSize; i++) {
@@ -29,7 +29,7 @@ export class MatchMakingService {
         }
 
         if (players.length === roomSize) {
-            const roomId = `room-${Date.now()}`;
+            const roomId = `match-${Date.now()}`;
             await this.rooms.createRoom(roomId, players);
             return roomId;
         }
