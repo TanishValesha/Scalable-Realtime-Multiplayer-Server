@@ -45,6 +45,10 @@ export class RedisManager {
     return raw ? JSON.parse(raw) : null;
   }
 
+  public getQueueLen(queue: string): Promise<number | undefined> {
+    return this.publisher.lLen(queue);
+  }
+
   public async sadd(key: string, members: string[] | string): Promise<void> {
     if (Array.isArray(members)) {
      for(const member of members){
