@@ -142,6 +142,16 @@ ws.send(JSON.stringify({
 | `STATE_UPDATE` *(server → client)* | Broadcast with the current state of the room           | `{ players: PlayerState[] }`                                                               |
 | `ECHO`                             | Debug echo test                                        | `{ any }`                                                                                  |
 
+## Scaling
+
+The application supports horizontal scaling by deploying multiple instances behind a load balancer. Using Redis Pub/Sub ensures that messages are broadcast and delivered reliably across all instances.
+
+```bash
+# Start multiple instances
+PORT=8080 npm start
+PORT=8081 npm start
+PORT=8082 npm start
+```
 
 ## Development
 
