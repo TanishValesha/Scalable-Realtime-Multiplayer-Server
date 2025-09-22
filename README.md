@@ -50,7 +50,7 @@ npm install
 
 3. Configure Redis
 ```bash
-cd docker
+cd redis-docker
 docker-compose up -d
 ```
 
