@@ -4,6 +4,10 @@ A cloud-native, **horizontally scalable real-time multiplayer WebSocket server**
 It supports room-based matchmaking, low-latency state synchronization, and dynamic scaling via Kubernetes’ Horizontal Pod Autoscaler (HPA).
 Deployed on **AWS EKS** with an **AWS Load Balancer**, **Redis (for Pub/Sub and task queues)**, and **Docker**.
 
+## Architecture Overview
+
+![Architecture Diagram](/assets/architecture.png)
+
 ### Core Components
 
 1. **WebSocket Service Layer**
